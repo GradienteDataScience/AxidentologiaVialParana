@@ -1,0 +1,119 @@
+---
+title: "FACTORES DE INCIDENCIA EN SINIESTROS VIALES EN EL DEPARTAMENTO PARANÁ, ENTRE RÍOS"
+author: "Alejandro Rouiller – Zacarías Ojeda – Melisa Fernández"
+date: "8/29/2019"
+output: ioslides_presentation
+---
+
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+library(readxl)
+library(dplyr)
+library("factoextra")
+library("FactoMineR")
+library(ggplot2)
+library(scales)
+```
+
+
+```{r, include=FALSE}
+datos<- read_excel("Formulario_Tecnico_Excel.xlsx")
+accidentologia <- read_excel("accidentologia-20190807-preprocesado.xlsx")
+accidentologia <- accidentologia[1:480,]
+```
+
+## Objetivo
+
+* Analizar los siniestros viales registrados en el departamento de Paraná durante el primer trimestre de 2018 por la División de Accidentología de la Dirección Criminalística de la Policía de Entre Ríos.
+* Determinar asociaciones entre variables para predecir la severidad de los siniestros.
+
+## Definiciones
+### **Siniestros leves**
+No hubo ninguna persona involucrada en el siniestro que fuera un herido grave.
+
+### **Siniestros graves**
+Al menos una persona en el siniestro resulto ser un *herido grave*.
+
+
+### **Herido grave**
+Cualquier persona herida que ha sido hospitalizada durante más de 24 horas.
+
+
+# Análisis descriptivo
+
+## Análisis de las lesiones
+```{r}
+accidentologia %>%
+  group_by(Lesiones)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad)) %>% 
+  ggplot(aes(Lesiones, cantidad, fill=Lesiones)) +
+  geom_bar(stat="identity") +
+  coord_flip() +
+  theme_minimal() +
+  labs(x="", y="", title="Cantidad lesionados según el carácter de la misma",  caption = "1er trimestre 2018")
+```
+
+## Siniestros según la hora del día
+```{r warning=FALSE}
+laboral = c("lunes", "martes", "miércoles", "jueves", "viernes")
+nolaboral = c("sábado", "domingo")
+
+aux <- datos %>%
+  select(hora) %>%
+  group_by(hora)%>%
+  summarise(
+    n = n()
+  )
+
+ggplot(aux, aes(x = hora, y=n)) +
+  geom_bar(stat="identity", aes(fill=n))+
+  geom_text(aes(label=n, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  scale_y_continuous(breaks = 0:100)+
+  scale_x_continuous(breaks = 0:23)+
+  coord_polar()+
+  labs(x="", y="", caption = "1er trimestre 2018")+
+  theme(
+      legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank()
+  )
+
+```
+
+## Analisis de la causalidad
+```{r include=FALSE}
+datos %>%
+  group_by(Causalidad)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+
+aux <- datos %>%
+  group_by(Causalidad)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+```
+
+```{r warning=FALSE, message=FALSE}
+ggplot(aux, aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
+  geom_bar(stat="identity", aes(fill=cantidad))+
+  geom_text(aes(label=cantidad, vjust=0), size=3)+
+  scale_fill_gradient(low="green", high="red")+
+  labs(x = "", y = "") + 
+  theme(
+      legend.position = "none",
+      panel.grid.minor.x  = element_blank(),
+      axis.text.x = element_text(angle=90)
+  )+
+  labs(title = "Causalidad de siniestros",
+                subtitle = "cantidades",
+                caption = "1er trimestre 2018")+
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+```

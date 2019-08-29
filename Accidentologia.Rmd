@@ -1,0 +1,674 @@
+---
+title: "Accidentologia"
+author: "Alejandro Mart?n Rouiller"
+date: "27 de agosto de 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## limpieza
+```{r}
+rm(list=ls())
+```
+
+
+## Librerias necesarias
+
+```{r}
+library(readxl)
+library(dplyr)
+library("factoextra")
+library("FactoMineR")
+library(ggplot2)
+library(scales)
+```
+
+## Directorio de trabajo y carga de archivos
+Datos contiene el dataset de los involucrados
+Accidentologia contiene el datset de los vehiculos
+
+Ambos dataset tiene en comun el nro de informe
+```{r}
+datos<- read_excel("Formulario_Tecnico_Excel.xlsx")
+accidentologia <- read_excel("accidentologia-20190807-preprocesado.xlsx")
+```
+
+##Procesamiento
+```{r}
+accidentologia<-accidentologia[1:480,]
+```
+
+## An?lisis de las lesiones
+```{r}
+accidentologia %>%
+  group_by(Lesiones)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+```
+
+## Convertimos las "lesiones leves" a "sin lesiones"
+```{r}
+datos <- datos%>%
+  mutate(
+    clasebinaria = ifelse(tipo_lesion %in% c("Lesiones leves", "Sin lesiones"), "Leve", "Grave")
+  )
+
+datos %>%
+  group_by(clasebinaria)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+```
+
+## Analisis de las comisar?as
+```{r}
+datos %>%
+  group_by(Comisaria)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+```
+```{r}
+aux <- datos %>%
+  group_by(tipo_lesion)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+
+ggplot(aux, aes(x = tipo_lesion, y=cantidad)) +
+  geom_bar(stat="identity", aes(fill=cantidad))+
+  geom_text(aes(label=cantidad, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  #scale_x_discrete(breaks = 0:23, labels=0:23)+
+  labs(x = "", y = "") + 
+  theme(
+      legend.position = "none",
+      #axis.text.y = element_blank(),
+      #axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank(),
+      axis.text.x = element_text(angle=90)
+  )+
+labs(title = "Effect of Vitamin C on Tooth Growth",
+              subtitle = "Plot of length by dose",
+              caption = "Data source: ToothGrowth")+
+theme(
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)
+)
+```
+
+
+## Analisis de la causalidad
+```{r}
+datos %>%
+  group_by(Causalidad)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+
+aux <- datos %>%
+  group_by(Causalidad)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+
+ggplot(aux, aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
+  geom_bar(stat="identity", aes(fill=cantidad))+
+  geom_text(aes(label=cantidad, vjust=0), size=3)+
+  scale_fill_gradient(low="green", high="red")+
+  #scale_x_discrete(breaks = 0:23, labels=0:23)+
+  labs(x = "", y = "") + 
+  theme(
+      legend.position = "none",
+      #axis.text.y = element_blank(),
+      #axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank(),
+      axis.text.x = element_text(angle=90)
+  )+
+labs(title = "Effect of Vitamin C on Tooth Growth",
+              subtitle = "Plot of length by dose",
+              caption = "Data source: ToothGrowth")+
+theme(
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)
+)
+```
+
+##Analisis del carnet de conducir
+```{r}
+datos %>%
+  group_by(carnet)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad))
+```
+
+```{r}
+laboral = c("lunes", "martes", "miércoles", "jueves", "viernes")
+nolaboral = c("sábado", "domingo")
+
+aux <- datos %>%
+  select(hora) %>%
+  group_by(hora)%>%
+  summarise(
+    n = n()
+  )
+
+ggplot(aux, aes(x = hora, y=n)) +
+  geom_bar(stat="identity", aes(fill=n))+
+  geom_text(aes(label=n, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  scale_y_continuous(breaks = 0:100)+
+  scale_x_continuous(breaks = 0:23)+
+  #scale_x_discrete(breaks = 0:23, labels=0:23)+
+  coord_polar()+
+  labs(x = "", y = "") + 
+  theme(
+      legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank()
+  )
+
+```
+
+```{r}
+laboral = c("lunes", "martes", "miércoles", "jueves", "viernes")
+nolaboral = c("sábado", "domingo")
+
+aux <- datos %>%
+  select(dia) %>%
+  mutate(
+    dia = factor(dia, levels=c("domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"))
+  )%>%
+  group_by(dia)%>%
+  summarise(
+    n = n()
+  )
+
+ggplot(aux, aes(x = dia, y=n)) +
+  geom_bar(stat="identity", aes(fill=n))+
+  geom_text(aes(label=n, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  #scale_x_discrete(breaks = 0:23, labels=0:23)+
+  labs(x = "", y = "") + 
+  theme(
+      legend.position = "none",
+      #axis.text.y = element_blank(),
+      #axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank()
+  )+
+labs(title = "Effect of Vitamin C on Tooth Growth",
+              subtitle = "Plot of length by dose",
+              caption = "Data source: ToothGrowth")+
+theme(
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)
+)
+
+```
+
+
+## Generamos intervalos con las edades de los conductores
+```{r}
+datos <- datos %>%
+  mutate(
+    edad1 = ifelse(conductor1<=20,"<20",
+            ifelse(conductor1>=21 & conductor1<30,"20",
+            ifelse(conductor1>=31 & conductor1<=50, "30-50","50+"))),
+    edad2 = ifelse(conductor2<=20,"<20",
+            ifelse(conductor2>=21 & conductor2<30,"20",
+            ifelse(conductor2>=31 & conductor2<=50, "30-50","50+")))
+  )
+
+EDAD <- as.data.frame(union_all(datos$edad1, datos$edad2))
+colnames(EDAD) <- c("edad")
+
+EDAD %>%
+  group_by(edad)%>%
+  summarise(
+    cantidad=n()
+  )%>%
+  arrange(desc(edad))
+
+
+```
+
+##Analisis de las unidades de transito involucradas
+```{r}
+datos %>%
+  group_by(unidad_transito)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+
+counts_VEHICULOS <- table(datos$unidad_transito)
+counts_VEHICULOS
+barplot(counts_VEHICULOS, main="UNIDAD DE TRANSITO INVOLUCRADAS", horiz=F, 
+        xlab="",col=c(1:31),las=2,cex.names=0.4)
+
+laboral = c("lunes", "martes", "miércoles", "jueves", "viernes")
+nolaboral = c("sábado", "domingo")
+
+aux <- datos %>%
+  select(unidad_transito) %>%
+  group_by(unidad_transito)%>%
+  summarise(
+    n = n()
+  )
+
+ggplot(aux, aes(x = reorder(unidad_transito, -n), y=n)) +
+  geom_bar(stat="identity", aes(fill=n))+
+  geom_text(aes(label=n, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  #scale_x_discrete(breaks = 0:23, labels=0:23)+
+  labs(x = "", y = "") + 
+  theme(
+      legend.position = "none",
+      #axis.text.y = element_blank(),
+      #axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank(),
+      axis.text.x = element_text(angle=90)
+  )+
+labs(title = "Effect of Vitamin C on Tooth Growth",
+              subtitle = "Plot of length by dose",
+              caption = "Data source: ToothGrowth")+
+theme(
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)
+)
+
+```
+
+## Analisis del tipo de lesion
+```{r}
+datos %>%
+  group_by(tipo_lesion)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+## Analisis de los fallecidos
+```{r}
+datos %>%
+  group_by(tipo_lesion_fallecidos)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+## Analisis de los judicializados
+```{r}
+datos %>%
+  group_by(judicializado)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+## Analisis de la hora
+```{r}
+counts_hora <- table(datos$hora)
+chisq.test(counts_hora)
+barplot(counts_hora, main="Hora", horiz=F, 
+        xlab="",col=c(1:24),las=1,cex.names=)
+```
+
+```{r}
+datos <- datos%>%
+  mutate(
+    horaNEW = 
+      ifelse(0<=hora & hora<6,"noche",
+      ifelse(6<=hora & hora<=12,"mañana",
+      ifelse(13<=hora & hora<=16,"siesta",
+      ifelse(17<=hora & hora<=21,"tarde","noche")))),
+    horaNEW1 = 
+      ifelse(0<=hora & hora<6,"noche",
+      ifelse(6<=hora & hora<=13,"mañana",
+      ifelse(14<=hora & hora<=21,"tarde","noche")))
+  )
+
+datos %>%
+  group_by(rango)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+## Categorizacion horas pico
+```{r}
+datos <- datos%>%
+  mutate(
+    hora_pico = 
+      ifelse(6<=hora & hora<=8,"Entrada",
+      ifelse(9<=hora & hora<=12,"laboral_M",
+      ifelse(13<=hora & hora<=14,"Salida_M",
+      ifelse(15<=hora & hora<=16,"laboral_S",
+      ifelse(17<=hora & hora<=19, "Salida_T",
+      ifelse(20<=hora & hora<=22, "Salida_N","Noche"))))))
+  )
+
+datos %>%
+  group_by(hora_pico)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+
+```
+
+
+## Datos de unidad
+```{r}
+datos <- datos%>%
+  mutate(
+    unidad1_N = 
+      ifelse(unidad1 %in% c("Peaton") ,"tipo_0",
+      ifelse(unidad1 %in% c("Bicicleta","Motocicleta"),"tipo_1",
+      ifelse(unidad1 %in% c("Automovil", "Camioneta", "Furgon", "Utilitario"), "tipo_2","tipo_3"))),
+    unidad2_N =
+	    ifelse(unidad2 %in% c("Peaton") ,"tipo_0",
+      ifelse(unidad2 %in% c("Bicicleta", "Motocicleta"),"tipo_1",
+	    ifelse(unidad2 %in% c("Automovil", "Camioneta", "Furgon", "Utilitario"), "tipo_2",
+	    ifelse(unidad2 %in% c("Solo"),"S_U","tipo_3"))))
+  )
+
+datos <- datos %>%
+  mutate(
+    unidades_involucradas = 
+      ifelse(
+              (unidad1_N=="tipo_0"  & unidad2_N=="tipo_1")
+             |(unidad1_N=="tipo_1"  & unidad2_N=="tipo_0"),
+             "P_M",
+      ifelse(
+              (unidad1_N=="tipo_0"  & unidad2_N=="tipo_2")
+             |(unidad1_N=="tipo_2"  & unidad2_N=="tipo_0"),
+             "P_A",
+      ifelse(
+              unidad1_N=="tipo_1"  & unidad2_N=="tipo_1",
+              "M_M",
+      ifelse(
+              unidad1_N=="tipo_2"  & unidad2_N=="tipo_2",
+              "A_A",
+      ifelse(
+              (unidad1_N=="tipo_1"  & unidad2_N=="tipo_2")
+             |(unidad1_N=="tipo_2"  & unidad2_N=="tipo_1"),
+             "A_M",
+      ifelse(
+              (unidad1_N=="tipo_1"& unidad2_N=="tipo_3") 
+             |(unidad1_N=="tipo_3"& unidad2_N=="tipo_1"),
+             "M_C",
+      ifelse(
+              (unidad1_N=="tipo_2"  & unidad2_N=="tipo_3")
+             |(unidad1_N=="tipo_3"  & unidad2_N=="tipo_2"),
+             "A_C",
+             "solo"
+      )))))))
+  )
+
+table(datos$unidades_involucradas)
+table(datos$unidades_involucradas,datos$hora)
+```
+
+##Analisis condicion clim?tica
+```{r}
+datos %>%
+  group_by(`condicion climatica`)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+##Analisis viento
+```{r}
+datos %>%
+  group_by(viento)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+##Analisis visibilidad
+```{r}
+datos %>%
+  group_by(visibilidad)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+##Analisis iluminacion
+```{r}
+datos %>%
+  group_by(Iluminacion)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+##Analisis de la calzada
+```{r}
+datos %>%
+  group_by(calzada)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+
+##Analisis del estado de la calzada
+```{r}
+datos %>%
+  group_by(`estado de la calzada`)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+##Analisis señalizacion vial
+```{r}
+datos %>%
+  group_by(`señalizacion vial`)%>%
+  summarise(
+    cantidad = n()
+  )%>%
+  arrange(desc(cantidad))
+```
+
+# An?lisis de las lesiones en funcion de las otras variables
+
+## Dia en funci?n de la hora
+```{r}
+tabla0=table(datos$dia,datos$hora) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+
+## Lesiones en funcion de d?a/noche
+```{r}
+tabla0=table(datos$clasebinaria,datos$rango) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+Las variables son independientes
+
+## Lesiones en funci?n de la hora
+```{r}
+tabla0=table(datos$clasebinaria,datos$horaNEW1) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+## Fallecidos en funcion de la hora
+```{r}
+tabla0=table(datos$tipo_lesion_fallecidos,datos$horaNEW1) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+
+ft <- fisher.test(tabla0)
+ft$p.value < 0.05
+```
+Existe relacion
+
+##Vehiculos involucrados
+```{r}
+tabla0  <- table(datos$unidad1_N,datos$unidad2_N) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+ft <- fisher.test(tabla0)
+ft$p.value < 0.05
+```
+Existe relacion
+
+## Lesiones unidad de transito
+```{r}
+tabla0  <- table(datos$clasebinaria,datos$unidad_transito) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+
+tabla0  <- table(datos$tipo_lesion,datos$unidades_involucradas) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+
+tabla0  <- table(datos$tipo_lesion_fallecidos,datos$unidades_involucradas) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+
+## Lesiones vehiculo involucrado
+```{r}
+tabla0  <- table(datos$clasebinaria,datos$unidades_involucradas) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+No hay relacion
+
+## Carnet lesiones
+```{r}
+tabla0  <- table(datos$carnet,datos$tipo_lesion_fallecidos) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+ft <- fisher.test(tabla0)
+ft$p.value < 0.05
+```
+
+Hay relacion
+
+```{r}
+tabla0  <- table(datos$carnet,datos$clasebinaria) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+ft <- fisher.test(tabla0)
+ft$p.value < 0.05
+```
+No hay relacion
+
+## Relacion entre carnet y judicializado
+```{r}
+tabla0  <- table(datos$carnet,datos$judicializado) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+## Relacion entre carnet y unidades involucradas
+```{r}
+tabla0  <- table(datos$carnet,datos$unidades_involucradas) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+##Relacion entre tipo de lesión y judicializado
+```{r}
+tabla0  <- table(datos$judicializado,datos$tipo_lesion) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+##Relacion entre el dia y las lesiones
+```{r}
+tabla0  <- table(datos$dia,datos$tipo_lesion) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+##Relacion dia y tipo de unidades
+```{r}
+tabla0  <- table(datos$dia,datos$unidades_involucradas) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+##Relacion dia/hora unidades lesion
+```{r}
+datos <- datos %>%
+  mutate(
+    diahora = paste(dia, hora, sep = '-')
+  )
+tabla0  <- table(datos$diahora,datos$tipo_lesion) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+## Relacion dia hora unidades involucradas
+```{r}
+tabla0  <- table(datos$diahora,datos$unidades_involucradas) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+## Relacion estado de la calzada lesiones
+```{r}
+tabla0  <- table(datos$`estado de la calzada`,datos$tipo_lesion_fallecidos) 
+ct <- chisq.test(tabla0)
+ct$p.value < 0.05
+```
+
+
+```{r}
+datos <- datos %>%
+  mutate(
+    DIA_NEW = ifelse(dia=="sábado" | dia=="domingo", "fds","l-v" )
+  )
+
+poison <- data.frame(datos$rango, datos$clasebinaria,datos$carnet,datos$DIA_NEW)
+res.mca <- MCA(poison, graph = F)
+summary(res.mca)
+clasebinaria <- as.factor(poison$datos.clasebinaria)
+fviz_mca_var(res.mca, repel = TRUE)
+
+fviz_mca(res.mca , col.ind = "black", habillage = clasebinaria,
+         addEllipses = TRUE, repel = TRUE, palette = c("blue", "black")) + theme_minimal()
+```
+
+
+```{r}
+res.mca1 <- MCA(accidentologia, graph = F)
+summary(res.mca1)
+
+fviz_mca_var(res.mca1, repel = TRUE)
+Clase <- as.factor(accidentologia$Clase)
+fviz_mca(res.mca1 , col.ind = "black", habillage = Clase,
+         addEllipses = TRUE, repel = TRUE, palette = c("blue", "black")) + theme_minimal()
+
+
+fviz_mca_ind(res.mca1, col.ind = "blue", habillage = Clase, addEllipses = TRUE, repel = TRUE) + theme_minimal()
+
+fviz_screeplot(res.mca1, addlabels = TRUE)
+fviz_contrib(res.mca1, choice ="var", axes = 1)
+
+```
+
+
+
+
