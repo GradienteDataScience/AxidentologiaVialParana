@@ -2,7 +2,12 @@
 title: "FACTORES DE INCIDENCIA EN SINIESTROS VIALES EN EL DEPARTAMENTO PARANÁ, ENTRE RÍOS"
 author: "Alejandro Rouiller – Zacarías Ojeda – Melisa Fernández"
 date: "8/29/2019"
-output: ioslides_presentation
+output:
+  revealjs::revealjs_presentation:
+    theme: solarized
+    highlight: pygments
+    center: true
+
 ---
 
 
@@ -43,6 +48,7 @@ Cualquier persona herida que ha sido hospitalizada durante más de 24 horas.
 
 # Análisis descriptivo
 
+
 ## Análisis de las lesiones
 ```{r}
 accidentologia %>%
@@ -55,6 +61,22 @@ accidentologia %>%
   theme_minimal() +
   labs(x="", y="", title="Cantidad lesionados según el carácter de la misma",  caption = "1er trimestre 2018")
 ```
+
+## Binarización de la clase lesiones
+```{r}
+datos <- datos%>%
+  mutate(
+    clasebinaria = ifelse(tipo_lesion %in% c("Lesiones leves", "Sin lesiones"), "Leve", "Grave")
+  )
+
+datos %>%
+  group_by(clasebinaria)%>%
+  ggplot( aes(x=clasebinaria, fill=clasebinaria))+
+  labs(x="", y="", caption="1er trimestre 2018") +
+  theme(legend.title = element_blank()) +
+    geom_bar( width = 1)
+```
+
 
 ## Siniestros según la hora del día
 ```{r warning=FALSE}
