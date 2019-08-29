@@ -196,4 +196,21 @@ datos %>%
 
 ```
 
+## seguir con las variables más importantes ...
+
+# Análisis bivariado
+
+## Resumen estadísticos de variables consideradas
+
+# Análisis multivariado
+
+## MCA
+
+# Análisis geolocalización
+
+## Mapas
+
+# Conclusiones
+
+
 
