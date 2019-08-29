@@ -103,25 +103,18 @@ ggplot(aux, aes(x = hora, y=n)) +
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank(),
       panel.grid.minor.x  = element_blank()
-  )
+  ) 
 
 ```
 
 ## Analisis de la causalidad
-```{r include=FALSE}
+
+```{r warning=FALSE, message=FALSE}
 datos %>%
   group_by(Causalidad)%>%
   summarise(cantidad = n())%>%
-  arrange(desc(cantidad))
-
-aux <- datos %>%
-  group_by(Causalidad)%>%
-  summarise(cantidad = n())%>%
-  arrange(desc(cantidad))
-```
-
-```{r warning=FALSE, message=FALSE}
-ggplot(aux, aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
+  arrange(desc(cantidad)) %>% 
+ggplot( aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
   geom_bar(stat="identity", aes(fill=cantidad))+
   geom_text(aes(label=cantidad, vjust=0), size=3)+
   scale_fill_gradient(low="green", high="red")+
@@ -139,3 +132,68 @@ ggplot(aux, aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
     plot.subtitle = element_text(hjust = 0.5)
   )
 ```
+
+## Edad de los conductores
+```{r warning=FALSE}
+datos <- datos %>%
+  mutate(
+    edad1 = ifelse(conductor1<=20,"<20",
+            ifelse(conductor1>=21 & conductor1<30,"20",
+            ifelse(conductor1>=31 & conductor1<=50, "30-50","50+"))),
+    edad2 = ifelse(conductor2<=20,"<20",
+            ifelse(conductor2>=21 & conductor2<30,"20",
+            ifelse(conductor2>=31 & conductor2<=50, "30-50","50+")))
+  )
+
+EDAD <- as.data.frame(union_all(datos$edad1, datos$edad2))
+colnames(EDAD) <- c("edad")
+
+EDAD %>%
+  group_by(edad)%>%
+  summarise(
+    cantidad=n()
+  )%>%
+  arrange(desc(edad))  %>% 
+ggplot( aes(x = reorder(edad, cantidad), y=cantidad)) +
+  geom_bar(stat="identity", aes(fill=cantidad))+
+  geom_text(aes(label=cantidad, vjust=0), size=3)+
+  scale_fill_gradient(low="green", high="red")+
+  coord_flip() +
+  theme(
+      legend.position = "none",
+      panel.grid.minor.x  = element_blank(),
+      axis.text.x = element_text(angle=90)
+  )+
+  labs(title = "Edad de los conductores",
+                subtitle = "cantidades",
+                caption = "1er trimestre 2018")+
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+
+
+```
+
+## Analisis de los fallecidos
+```{r}
+datos %>%
+  ggplot(aes(x=tipo_lesion_fallecidos, fill=tipo_lesion_fallecidos)) +
+  geom_bar() + 
+  geom_text(aes(label=..count.., vjust=0), size=3, stat = 'count')+
+  theme(
+      legend.position = "none",
+      panel.grid.minor.x  = element_blank()
+  )+
+  labs(title = "Tipo de lesión en fallecidos",
+                subtitle = "cantidades",
+                caption = "1er trimestre 2018",
+       x="tipo de lesión")+
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+
+```
+
+
