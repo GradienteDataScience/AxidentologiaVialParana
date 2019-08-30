@@ -86,6 +86,10 @@ datos$horaNEW1 <- ifelse(0<=datos$hora & datos$hora<6,"noche",ifelse(6<=datos$ho
 datos$clasebinaria <- ifelse(datos$tipo_lesion=="Lesiones leves" | datos$tipo_lesion=="Sin lesiones", "Leve", "Grave")
 ```
 
+# Motivación
+
+# Metodología
+
 ## Objetivo
 
 * Analizar los siniestros viales registrados en el departamento de Paraná durante el primer trimestre de 2018 por la División de Accidentología de la Dirección Criminalística de la Policía de Entre Ríos.
@@ -100,10 +104,10 @@ Al menos una persona en el siniestro resulto ser un *herido grave*.
 
 
 ### **Herido grave**
-Cualquier persona herida que ha sido hospitalizada durante más de 24 horas.
+Cualquier persona hospitalizada durante más de 24 horas.
 
 ### **Unidad de trafico**
-Cualquiera de las partes involucradas en el siniestros. Puede ser un automóvil, una bicicleta, un peatón, etc.
+Cualquiera de las partes involucradas en el siniestros.
 
 # Análisis descriptivo
 
