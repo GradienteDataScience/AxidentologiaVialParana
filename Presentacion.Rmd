@@ -23,6 +23,8 @@ library(corrplot)
 
 if(!require('leaflet')) install.packages('leaflet')
 library(leaflet)
+
+library(ggpubr)
 ```
 
 
@@ -100,6 +102,8 @@ Al menos una persona en el siniestro resulto ser un *herido grave*.
 ### **Herido grave**
 Cualquier persona herida que ha sido hospitalizada durante más de 24 horas.
 
+### **Unidad de trafico**
+Cualquiera de las partes involucradas en el siniestros. Puede ser un automóvil, una bicicleta, un peatón, etc.
 
 # Análisis descriptivo
 
@@ -110,51 +114,125 @@ accidentologia %>%
   group_by(Lesiones)%>%
   summarise(cantidad = n())%>%
   arrange(desc(cantidad)) %>% 
-  ggplot(aes(reorder(Lesiones, cantidad), cantidad, fill=Lesiones)) +
+  mutate(
+    Lesiones = ifelse(is.na(Lesiones), "NA", Lesiones),
+    Lesiones = factor(Lesiones, levels = c("Sin lesiones", "Lesiones leves", "Lesiones graves", "Fallecido", "NA"))
+  )%>%
+  ggplot(aes(Lesiones, cantidad, fill=Lesiones)) +
   geom_bar(stat="identity") +
-    geom_text(aes(label=cantidad, hjust=0))+
-  coord_flip() +
+    geom_text(aes(label=cantidad, vjust=0))+
   theme_minimal() +
   labs(x="", y="", title="Cantidad lesionados según el carácter de la lesión",  caption = "1er trimestre 2018")+
   theme(legend.position = "none")
 ```
 
-## Siniestros de acuerdo al tipo de lesión
+## Analisis de los siniestros en base a las lesiones
 ```{r}
-datos <- datos%>%
+datos %>%
   mutate(
-    clasebinaria = ifelse(tipo_lesion %in% c("Lesiones leves", "Sin lesiones"), "Leve", "Grave")
+    tipo_lesion_fallecidos = ifelse(tipo_lesion_fallecidos=="Lesiones graves_f", "Fallecido", tipo_lesion_fallecidos),
+    tipo_lesion_fallecidos = factor(tipo_lesion_fallecidos, levels= c("Sin lesiones", "Lesiones leves", "Lesiones graves", "Fallecido"))
+  )%>%
+  ggplot(aes(x=tipo_lesion_fallecidos, fill=tipo_lesion_fallecidos)) +
+  geom_bar() + 
+  geom_text(aes(label=..count.., vjust=0), size=3, stat = 'count')+
+  theme(
+      legend.position = "none",
+      panel.grid.minor.x  = element_blank()
+  )+
+  labs(title = "Cantidad de siniestros de acuerdo al tipo de lesion",
+                subtitle = "",
+                caption = "1er trimestre 2018",
+       x="",
+       y="Cantidad de siniestros")+
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
   )
 
-datos %>%
-  group_by(clasebinaria)%>%
-  ggplot( aes(x=clasebinaria, fill=clasebinaria))+
-  labs(x="", y="Cantidad de siniestros", title="Cantidad de siniestros de acuerdo al tipo de lesion",  caption = "1er trimestre 2018")+
-  theme(legend.title = element_blank(), legend.position = "none") +
-    geom_bar( width = 1)
+```
+
+## Cantidad de unidades de transito involucradas
+```{r warning=FALSE}
+s1 <- datos %>%
+  mutate(unidad_transito = unidad1)
+
+s2 <- datos %>%
+  mutate(unidad_transito =unidad2)
+
+union_all(s1, s2)%>%
+  filter(unidad_transito != "Solo")%>%
+  group_by(unidad_transito)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad)) %>% 
+  ggplot(aes(reorder(unidad_transito, cantidad), cantidad, fill=unidad_transito)) +
+  geom_bar(stat="identity") +
+    geom_text(aes(label=cantidad, hjust=0))+
+  coord_flip() +
+  theme_minimal() +
+  labs(x="", y="", title="Cantidad de unidades de transito involucradas",  caption = "1er trimestre 2018")+
+  theme(legend.position = "none")
+```
+
+## Siniestros de acuerdo al tipo de unidades de transito involucradas
+```{r warning=FALSE}
+datos%>%
+  group_by(unidad_transito)%>%
+  summarise(cantidad = n())%>%
+  arrange(desc(cantidad)) %>% 
+  ggplot(aes(reorder(unidad_transito, cantidad), cantidad, fill=unidad_transito)) +
+  geom_bar(stat="identity") +
+    geom_text(aes(label=cantidad, hjust=0))+
+  coord_flip() +
+  theme_minimal() +
+  labs(x="", y="", title="Cantidad de siniestros de acuerdo a las unidades de transito involucradas",  caption = "1er trimestre 2018")+
+  theme(legend.position = "none")
 ```
 
 
 ## Siniestros según la hora del día
 ```{r warning=FALSE}
-laboral = c("lunes", "martes", "miércoles", "jueves", "viernes")
-nolaboral = c("sábado", "domingo")
-
-aux <- datos %>%
+datos %>%
   select(hora) %>%
   group_by(hora)%>%
   summarise(
     n = n()
-  )
-
-ggplot(aux, aes(x = hora, y=n)) +
+  )%>%
+ggplot(aes(x = hora, y=n)) +
   geom_bar(stat="identity", aes(fill=n))+
   geom_text(aes(label=n, vjust=0))+
   scale_fill_gradient(low="green", high="red")+
   scale_y_continuous(breaks = 0:100)+
   scale_x_continuous(breaks = 0:23)+
   coord_polar()+
-  labs(x="", y="", title="Cantidad siniestros de acuerdo a la hora",  caption = "1er trimestre 2018")+
+  labs(x="", y="", title="Cantidad de siniestros según la hora del día",  caption = "1er trimestre 2018")+
+  theme(
+      legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank()
+  ) 
+```
+
+## Siniestros según la hora del día - Lunes a viernes vs fines de semana
+```{r warning=FALSE}
+laboral = c("lunes", "martes", "miércoles", "jueves", "viernes")
+nolaboral = c("sábado", "domingo")
+g2 <- datos %>%
+  filter(dia %in% laboral)%>%
+  select(hora) %>%
+  group_by(hora)%>%
+  summarise(
+    n = n()
+  )%>%
+ggplot(aes(x = hora, y=n)) +
+  geom_bar(stat="identity", aes(fill=n))+
+  geom_text(aes(label=n, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  scale_y_continuous(breaks = 0:100)+
+  scale_x_continuous(breaks = 0:23)+
+  coord_polar()+
+  labs(x="", y="", title="",  caption = "")+
   theme(
       legend.position = "none",
       axis.text.y = element_blank(),
@@ -162,10 +240,32 @@ ggplot(aux, aes(x = hora, y=n)) +
       panel.grid.minor.x  = element_blank()
   ) 
 
+g3 <- datos %>%
+  filter(dia %in% nolaboral)%>%
+  select(hora) %>%
+  group_by(hora)%>%
+  summarise(
+    n = n()
+  )%>%
+ggplot(aes(x = hora, y=n)) +
+  geom_bar(stat="identity", aes(fill=n))+
+  geom_text(aes(label=n, vjust=0))+
+  scale_fill_gradient(low="green", high="red")+
+  scale_y_continuous(breaks = 0:100)+
+  scale_x_continuous(breaks = 0:23)+
+  coord_polar()+
+  labs(x="", y="", title="",  caption = "")+
+  theme(
+      legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      panel.grid.minor.x  = element_blank()
+  ) 
+
+ggarrange(g2, g3, nrow=1, ncol=2, labels=c("Lunes a viernes", "Fines de semana"))
 ```
 
 ## Analisis de la causalidad
-
 ```{r warning=FALSE, message=FALSE}
 datos %>%
   group_by(Causalidad)%>%
@@ -217,7 +317,7 @@ EDAD %>%
 ggplot( aes(x = edad, y=cantidad)) +
   geom_bar(stat="identity", aes(fill=cantidad))+
   geom_text(aes(label=cantidad, vjust=0), size=3)+
-  scale_fill_gradient(low="green", high="red")+
+  scale_fill_gradient(low="green", high="green")+
   theme(
       legend.position = "none",
       panel.grid.minor.x  = element_blank(),
@@ -236,32 +336,20 @@ ggplot( aes(x = edad, y=cantidad)) +
 
 ```
 
-## Analisis de las lesiones
+## Siniestros de acuerdo al tipo de lesión
 ```{r}
-datos %>%
+datos <- datos%>%
   mutate(
-    tipo_lesion_fallecidos = factor(tipo_lesion_fallecidos, levels= c("Sin lesiones", "Lesiones leves", "Lesiones graves", "Lesiones graves_f"))
-  )%>%
-  ggplot(aes(x=tipo_lesion_fallecidos, fill=tipo_lesion_fallecidos)) +
-  geom_bar() + 
-  geom_text(aes(label=..count.., vjust=0), size=3, stat = 'count')+
-  theme(
-      legend.position = "none",
-      panel.grid.minor.x  = element_blank()
-  )+
-  labs(title = "Cantidad de siniestros de acuerdo al tipo de lesion",
-                subtitle = "",
-                caption = "1er trimestre 2018",
-       x="Tipo de lesión",
-       y="Cantidad de siniestros")+
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5)
+    clasebinaria = ifelse(tipo_lesion %in% c("Lesiones leves", "Sin lesiones"), "Leve", "Grave")
   )
 
+datos %>%
+  group_by(clasebinaria)%>%
+  ggplot( aes(x=clasebinaria, fill=clasebinaria))+
+  labs(x="", y="Cantidad de siniestros", title="Cantidad de siniestros de acuerdo al tipo de lesion",  caption = "1er trimestre 2018")+
+  theme(legend.title = element_blank(), legend.position = "none") +
+    geom_bar( width = 1)
 ```
-
-## seguir con las variables más importantes ...
 
 # Análisis bivariado
 
