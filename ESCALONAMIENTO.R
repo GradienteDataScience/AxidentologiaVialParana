@@ -1,5 +1,5 @@
 library(readxl)
-datos_gps <- read_excel("C:/Users/Melo/Desktop/Gradiente/datos_gps.xlsx")
+datos_gps <- read_excel("datos_gps.xlsx")
 
 datos_gps$clasebinaria <- ifelse(datos_gps$tipo_lesion=="Lesiones leves" | datos_gps$tipo_lesion=="Sin lesiones", "Leve", "Grave")
 View(datos_gps)
@@ -16,6 +16,7 @@ delete.na <- function(df, n=0) {
 
 datos_gps <- data.frame(delete.na(datos_gps))
 View(datos_gps)
+
 ##################################
 
 library(ggplot2)
@@ -35,10 +36,9 @@ datos=data.frame(data)
 colnames(datos)=c("Latitud","Longitud")
 rownames(datos)=datos_gps$informe
 gpr <- as.factor(datos_gps[, "clasebinaria"])
-p<- ggplot(datos,aes(x=Latitud, y=Longitud))
-p + geom_point(aes(colour = factor(gpr)))+ scale_x_continuous(limit = c(0,1.5)) 
-p + geom_point(aes(colour = factor(gpr)))+ scale_x_continuous(limit = c(0,1.5))+
-  geom_text_repel(aes(label=rownames(datos)))
+p <- ggplot(datos,aes(x=Latitud, y=Longitud)) +
+  geom_point(aes(colour = factor(gpr)))+ scale_x_continuous(limit = c(0,1.5))
+p
 
 #install.packages("smacof")
 
