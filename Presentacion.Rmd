@@ -18,11 +18,13 @@ library("factoextra")
 library("FactoMineR")
 library(ggplot2)
 library(scales)
+library(graphics)
+library(corrplot)
 
 if(!require('leaflet')) install.packages('leaflet')
 library(leaflet)
-if(!require('sf')) install.packages('sf')
-library(sf)
+#if(!require('sf')) install.packages('sf')
+#library(sf)
 ```
 
 
@@ -79,6 +81,9 @@ library(sf)
 datos<- read_excel("Formulario_Tecnico_Excel.xlsx")
 accidentologia <- read_excel("accidentologia-20190807-preprocesado.xlsx")
 accidentologia <- accidentologia[1:480,]
+
+datos$horaNEW1 <- ifelse(0<=datos$hora & datos$hora<6,"noche",ifelse(6<=datos$hora & datos$hora<=13,"mañana",ifelse(14<=datos$hora & datos$hora<=21,"tarde","noche")))
+datos$clasebinaria <- ifelse(datos$tipo_lesion=="Lesiones leves" | datos$tipo_lesion=="Sin lesiones", "Leve", "Grave")
 ```
 
 ## Objetivo
@@ -251,6 +256,79 @@ datos %>%
 ## seguir con las variables más importantes ...
 
 # Análisis bivariado
+
+## Resumen estadísticos de variables consideradas
+
+![Alt text](./img/resumen bivariado.PNG)
+
+## Tipo de lesion vs dia/noche
+
+```{r}
+(table(datos$clasebinaria,datos$rango) %>%
+  chisq.test(tabla0))$stdres %>%
+corrplot(
+    is.cor = FALSE, 
+    method='circle', 
+    order="hclust", 
+    title="prueba", 
+    addCoef.col = "black", # Add coefficient of correlation
+    # Combine with significance
+    sig.level = 0.05, insig = "blank", 
+    # hide correlation coefficient on the principal diagonal
+    mar=c(0,0,1,0) # http://stackoverflow.com/a/14754408/54964
+)
+
+```
+
+## Tipo de lesion vs mañana/tarde/noche
+```{r warning=FALSE}
+(table(datos$horaNEW1,datos$tipo_lesion_fallecidos) %>%
+  chisq.test(tabla0))$stdres%>%
+corrplot(
+    is.cor = FALSE, 
+    method='circle', 
+    #order="hclust", 
+    title="prueba", 
+    addCoef.col = "black", # Add coefficient of correlation
+    # Combine with significance
+    #sig.level = 0.05, insig = "blank"#, 
+    # hide correlation coefficient on the principal diagonal
+    mar=c(0,0,1,0) # http://stackoverflow.com/a/14754408/54964
+)
+```
+
+## Tipo de lesion vs judicializado/con carnet
+```{r warning=FALSE}
+(table(datos$carnet,datos$tipo_lesion_fallecidos) %>%
+  chisq.test(tabla0))$stdres%>%
+corrplot(
+    is.cor = FALSE, 
+    method='circle', 
+    #order="hclust", 
+    title="prueba", 
+    addCoef.col = "black", # Add coefficient of correlation
+    # Combine with significance
+    #sig.level = 0.05, insig = "blank"#, 
+    # hide correlation coefficient on the principal diagonal
+    mar=c(0,0,1,0) # http://stackoverflow.com/a/14754408/54964
+)
+```
+
+```{r}
+(table(datos$judicializado,datos$carnet) %>%
+  chisq.test(tabla0))$stdres%>%
+corrplot(
+    is.cor = FALSE, 
+    method='circle', 
+    #order="hclust", 
+    title="prueba", 
+    addCoef.col = "black", # Add coefficient of correlation
+    # Combine with significance
+    #sig.level = 0.05, insig = "blank"#, 
+    # hide correlation coefficient on the principal diagonal
+    mar=c(0,0,1,0) # http://stackoverflow.com/a/14754408/54964
+)
+```
 
 ## Resumen estadísticos de variables consideradas
 
