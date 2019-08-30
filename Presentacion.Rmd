@@ -105,19 +105,21 @@ Cualquier persona herida que ha sido hospitalizada durante más de 24 horas.
 
 
 ## Análisis de las lesiones
-```{r}
+```{r warning=FALSE}
 accidentologia %>%
   group_by(Lesiones)%>%
   summarise(cantidad = n())%>%
   arrange(desc(cantidad)) %>% 
-  ggplot(aes(Lesiones, cantidad, fill=Lesiones)) +
+  ggplot(aes(reorder(Lesiones, cantidad), cantidad, fill=Lesiones)) +
   geom_bar(stat="identity") +
+    geom_text(aes(label=cantidad, hjust=0))+
   coord_flip() +
   theme_minimal() +
-  labs(x="", y="", title="Cantidad lesionados según el carácter de la misma",  caption = "1er trimestre 2018")
+  labs(x="", y="", title="Cantidad lesionados según el carácter de la lesión",  caption = "1er trimestre 2018")+
+  theme(legend.position = "none")
 ```
 
-## Binarización de la clase lesiones
+## Siniestros de acuerdo al tipo de lesión
 ```{r}
 datos <- datos%>%
   mutate(
@@ -127,8 +129,8 @@ datos <- datos%>%
 datos %>%
   group_by(clasebinaria)%>%
   ggplot( aes(x=clasebinaria, fill=clasebinaria))+
-  labs(x="", y="", caption="1er trimestre 2018") +
-  theme(legend.title = element_blank()) +
+  labs(x="", y="Cantidad de siniestros", title="Cantidad de siniestros de acuerdo al tipo de lesion",  caption = "1er trimestre 2018")+
+  theme(legend.title = element_blank(), legend.position = "none") +
     geom_bar( width = 1)
 ```
 
@@ -152,7 +154,7 @@ ggplot(aux, aes(x = hora, y=n)) +
   scale_y_continuous(breaks = 0:100)+
   scale_x_continuous(breaks = 0:23)+
   coord_polar()+
-  labs(x="", y="", caption = "1er trimestre 2018")+
+  labs(x="", y="", title="Cantidad siniestros de acuerdo a la hora",  caption = "1er trimestre 2018")+
   theme(
       legend.position = "none",
       axis.text.y = element_blank(),
@@ -179,9 +181,9 @@ ggplot( aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
       panel.grid.minor.x  = element_blank(),
       axis.text.x = element_text(angle=90)
   )+
-  labs(title = "Causalidad de siniestros",
-                subtitle = "cantidades",
-                caption = "1er trimestre 2018")+
+  labs(title =  "Cantidad de siniestros de acuerdo a la causalidad",
+                caption = "1er trimestre 2018",
+       y="Cantidad de siniestros")+
   theme(
     plot.title = element_text(hjust = 0.5),
     plot.subtitle = element_text(hjust = 0.5)
@@ -193,35 +195,39 @@ ggplot( aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
 datos <- datos %>%
   mutate(
     edad1 = ifelse(conductor1<=20,"<20",
-            ifelse(conductor1>=21 & conductor1<30,"20",
+            ifelse(conductor1>=21 & conductor1<30,"20-30",
             ifelse(conductor1>=31 & conductor1<=50, "30-50","50+"))),
     edad2 = ifelse(conductor2<=20,"<20",
-            ifelse(conductor2>=21 & conductor2<30,"20",
+            ifelse(conductor2>=21 & conductor2<30,"20-30",
             ifelse(conductor2>=31 & conductor2<=50, "30-50","50+")))
   )
 
 EDAD <- as.data.frame(union_all(datos$edad1, datos$edad2))
 colnames(EDAD) <- c("edad")
 
+
 EDAD %>%
   group_by(edad)%>%
   summarise(
     cantidad=n()
   )%>%
-  arrange(desc(edad))  %>% 
-ggplot( aes(x = reorder(edad, cantidad), y=cantidad)) +
+  mutate(
+    edad = factor(edad)
+  )%>% 
+ggplot( aes(x = edad, y=cantidad)) +
   geom_bar(stat="identity", aes(fill=cantidad))+
   geom_text(aes(label=cantidad, vjust=0), size=3)+
   scale_fill_gradient(low="green", high="red")+
-  coord_flip() +
   theme(
       legend.position = "none",
       panel.grid.minor.x  = element_blank(),
       axis.text.x = element_text(angle=90)
   )+
   labs(title = "Edad de los conductores",
-                subtitle = "cantidades",
-                caption = "1er trimestre 2018")+
+                subtitle = "",
+                caption = "1er trimestre 2018",
+       x="",y=""
+       )+
   theme(
     plot.title = element_text(hjust = 0.5),
     plot.subtitle = element_text(hjust = 0.5)
@@ -230,9 +236,12 @@ ggplot( aes(x = reorder(edad, cantidad), y=cantidad)) +
 
 ```
 
-## Analisis de los fallecidos
+## Analisis de las lesiones
 ```{r}
 datos %>%
+  mutate(
+    tipo_lesion_fallecidos = factor(tipo_lesion_fallecidos, levels= c("Sin lesiones", "Lesiones leves", "Lesiones graves", "Lesiones graves_f"))
+  )%>%
   ggplot(aes(x=tipo_lesion_fallecidos, fill=tipo_lesion_fallecidos)) +
   geom_bar() + 
   geom_text(aes(label=..count.., vjust=0), size=3, stat = 'count')+
@@ -240,10 +249,11 @@ datos %>%
       legend.position = "none",
       panel.grid.minor.x  = element_blank()
   )+
-  labs(title = "Tipo de lesión en fallecidos",
-                subtitle = "cantidades",
+  labs(title = "Cantidad de siniestros de acuerdo al tipo de lesion",
+                subtitle = "",
                 caption = "1er trimestre 2018",
-       x="tipo de lesión")+
+       x="Tipo de lesión",
+       y="Cantidad de siniestros")+
   theme(
     plot.title = element_text(hjust = 0.5),
     plot.subtitle = element_text(hjust = 0.5)
@@ -259,7 +269,7 @@ datos %>%
 
 ![Alt text](./img/resumen bivariado.PNG)
 
-## Tipo de lesion vs dia/noche
+## Tipo de lesion (binarizada) vs dia/noche
 
 ```{r}
 (table(datos$clasebinaria,datos$rango) %>%
@@ -268,7 +278,7 @@ corrplot(
     is.cor = FALSE, 
     method='circle', 
     order="hclust", 
-    title="prueba", 
+    title="Tipo de lesión (binarizada) vs dia/noche",
     addCoef.col = "black", # Add coefficient of correlation
     # Combine with significance
     sig.level = 0.05, insig = "blank", 
@@ -278,7 +288,7 @@ corrplot(
 
 ```
 
-## Tipo de lesion vs mañana/tarde/noche
+## Momento del dia (mañana/tarde/noche) vs tipo de lesion
 ```{r warning=FALSE}
 (table(datos$horaNEW1,datos$tipo_lesion_fallecidos) %>%
   chisq.test(tabla0))$stdres%>%
@@ -286,7 +296,7 @@ corrplot(
     is.cor = FALSE, 
     method='circle', 
     #order="hclust", 
-    title="prueba", 
+    title="Momento del dia (mañana/tarde/noche) vs tipo de lesion", 
     addCoef.col = "black", # Add coefficient of correlation
     # Combine with significance
     #sig.level = 0.05, insig = "blank"#, 
@@ -295,7 +305,7 @@ corrplot(
 )
 ```
 
-## Tipo de lesion vs judicializado/con carnet
+## Posesión de carnet vs tipo de lesion
 ```{r warning=FALSE}
 (table(datos$carnet,datos$tipo_lesion_fallecidos) %>%
   chisq.test(tabla0))$stdres%>%
@@ -303,7 +313,7 @@ corrplot(
     is.cor = FALSE, 
     method='circle', 
     #order="hclust", 
-    title="prueba", 
+    title="Posesión de carnet vs tipo de lesion", 
     addCoef.col = "black", # Add coefficient of correlation
     # Combine with significance
     #sig.level = 0.05, insig = "blank"#, 
@@ -312,6 +322,7 @@ corrplot(
 )
 ```
 
+## Siniestro judicializado vs posesión de carnet
 ```{r}
 (table(datos$judicializado,datos$carnet) %>%
   chisq.test(tabla0))$stdres%>%
@@ -319,7 +330,7 @@ corrplot(
     is.cor = FALSE, 
     method='circle', 
     #order="hclust", 
-    title="prueba", 
+    title="Siniestro judicializado vs posesión de carnet", 
     addCoef.col = "black", # Add coefficient of correlation
     # Combine with significance
     #sig.level = 0.05, insig = "blank"#, 
@@ -332,7 +343,7 @@ corrplot(
 
 # Análisis multivariado
 
-## MCA variables
+## MCA porcentaje explicado de la varianza
 
 ```{r}
 datos <- datos %>%
@@ -342,8 +353,13 @@ datos <- datos %>%
 
 poison <- data.frame(datos$rango, datos$clasebinaria,datos$carnet,datos$DIA_NEW)
 res.mca <- MCA(poison, graph = F)
+fviz_screeplot(res.mca, addlabels=TRUE, ylim=c(0, 40), main ="Porcentaje explicado de la varianza", x="Dimensiones", y="Porcentaje explicado de la varianza")
+```
+
+## MCA variables
+```{r}
 fviz_mca_var(res.mca, repel = TRUE) +
-  labs(title = "variables")
+  labs(title = "")
 
 ```
 
@@ -351,7 +367,7 @@ fviz_mca_var(res.mca, repel = TRUE) +
 ```{r}
 fviz_mca(res.mca , col.ind = "black", habillage = as.factor(datos$clasebinaria),
          addEllipses = TRUE, repel = TRUE, palette = c("red", "navy")) + 
-  labs(title="biplot") +
+  labs(title="") +
   theme_minimal()
 
 ```
