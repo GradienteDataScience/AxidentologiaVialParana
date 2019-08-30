@@ -4,9 +4,7 @@ author: "Alejandro Rouiller – Zacarías Ojeda – Melisa Fernández"
 date: "8/29/2019"
 output:
   revealjs::revealjs_presentation:
-    theme: solarized
-    highlight: pygments
-    center: true
+    theme: league
 
 ---
 
@@ -20,8 +18,62 @@ library("factoextra")
 library("FactoMineR")
 library(ggplot2)
 library(scales)
+
+if(!require('leaflet')) install.packages('leaflet')
+library(leaflet)
+if(!require('sf')) install.packages('sf')
+library(sf)
 ```
 
+
+<style>
+
+.leaflet-tile-container img.leaflet-tile  {
+    margin: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    max-height: inherit;
+}
+
+.reveal .leaflet-container {
+    font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+
+.reveal .leaflet-container .leaflet-popup-tip-container {
+    margin: 0 auto;
+}
+
+.reveal .leaflet-container .leaflet-popup-content-wrapper {
+    padding: 1px;
+    margin: inherit;
+}
+
+.reveal .leaflet-container .leaflet-popup-content {
+    margin: 13px 19px;
+    line-height: 1.4;
+}
+
+.reveal .leaflet-container .leaflet-popup-content h3 {
+    color: #333;
+}
+
+.reveal .leaflet-container .leaflet-popup-tip {
+    padding: 1px;
+    margin: -10px auto 0;
+}
+
+.reveal .leaflet-container .leaflet-popup-content, .reveal .leaflet-popup-content h2 {
+    color: #333;
+}
+
+.reveal .leaflet-container .leaflet-popup-content pre {
+    font-size: 14px;
+    width: 100%;
+    box-shadow: none;
+}
+</style>
 
 ```{r, include=FALSE}
 datos<- read_excel("Formulario_Tecnico_Excel.xlsx")
@@ -208,7 +260,49 @@ datos %>%
 
 # Análisis geolocalización
 
-## Mapas
+## Por categoría de siniestro
+```{r  echo=FALSE, warning=FALSE, message=FALSE}
+pal <- colorFactor(c("navy", "red"), domain = c("Leve", "Grave"), reverse = TRUE)
+
+datos %>% 
+  filter(!is.na(gps1), !is.na(gps2)) %>% 
+  mutate(latitude=gps1, longitude=gps2) %>% 
+  leaflet() %>% 
+    addTiles() %>%
+    setView( -60.532052086859494, -31.72776901942767, zoom = 12) %>% 
+    addCircleMarkers(
+      radius = 5,
+      color = ~pal(clasebinaria),
+      stroke = FALSE, fillOpacity = 0.5
+    ) %>% 
+  addLegend("topright", pal = pal, values = ~clasebinaria,
+    title = "categoría",
+    opacity = 1
+  )
+```
+
+## Por rango horario
+```{r  echo=FALSE, warning=FALSE, message=FALSE}
+pal <- colorFactor(c("blue", "yellow"), domain = c("NOCHE", "DIA"), reverse = TRUE)
+
+datos %>% 
+  filter(!is.na(gps1), !is.na(gps2)) %>% 
+  mutate(latitude=gps1, longitude=gps2) %>% 
+  leaflet() %>% 
+    addTiles() %>%
+    setView( -60.532052086859494, -31.72776901942767, zoom = 12) %>% 
+    addCircleMarkers(
+      radius = 5,
+      color = ~pal(rango),
+      stroke = FALSE, fillOpacity = 0.5
+    ) %>% 
+  addLegend("topright", pal = pal, values = ~rango,
+    title = "Rango horario",
+    opacity = 1
+  )
+```
+
+
 
 # Conclusiones
 
