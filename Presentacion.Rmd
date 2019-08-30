@@ -23,8 +23,6 @@ library(corrplot)
 
 if(!require('leaflet')) install.packages('leaflet')
 library(leaflet)
-#if(!require('sf')) install.packages('sf')
-#library(sf)
 ```
 
 
@@ -334,7 +332,30 @@ corrplot(
 
 # Análisis multivariado
 
-## MCA
+## MCA variables
+
+```{r}
+datos <- datos %>%
+  mutate(
+    DIA_NEW = ifelse(dia=="sábado" | dia=="domingo", "fds","l-v" )
+  )
+
+poison <- data.frame(datos$rango, datos$clasebinaria,datos$carnet,datos$DIA_NEW)
+res.mca <- MCA(poison, graph = F)
+fviz_mca_var(res.mca, repel = TRUE) +
+  labs(title = "variables")
+
+```
+
+## MCA biplot
+```{r}
+fviz_mca(res.mca , col.ind = "black", habillage = as.factor(datos$clasebinaria),
+         addEllipses = TRUE, repel = TRUE, palette = c("red", "navy")) + 
+  labs(title="biplot") +
+  theme_minimal()
+
+```
+
 
 # Análisis geolocalización
 
@@ -379,6 +400,8 @@ datos %>%
     opacity = 1
   )
 ```
+
+
 
 
 
