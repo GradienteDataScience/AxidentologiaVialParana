@@ -1,5 +1,5 @@
 library(readxl)
-datos<- read_excel("C:/Users/Melo/Desktop/Gradiente/Formulario_Técnico_Excel.xlsx")
+datos<- read_excel("C:/Users/Melo/Desktop/Gradiente/Formulario_T?cnico_Excel.xlsx")
 
 #clase binaria
 datos$clasebinaria <- ifelse(datos$tipo_lesion=="Lesiones leves" | datos$tipo_lesion=="Sin lesiones", "Leve", "Grave")
@@ -14,9 +14,9 @@ datos$edad2 <- ifelse(datos$conductor2<=20,"<20",
                              ifelse(datos$conductor2>=31 & datos$conductor2<=50, "30-50","50+")))
 #rangos horarios
 
-datos$horaNEW <- ifelse(0<=datos$hora & datos$hora<6,"noche",ifelse(6<=datos$hora & datos$hora<=12,"mañana",ifelse(13<=datos$hora & datos$hora<=16,"siesta",ifelse(17<=datos$hora & datos$hora<=21,"tarde","noche"))))
+datos$horaNEW <- ifelse(0<=datos$hora & datos$hora<6,"noche",ifelse(6<=datos$hora & datos$hora<=12,"ma?ana",ifelse(13<=datos$hora & datos$hora<=16,"siesta",ifelse(17<=datos$hora & datos$hora<=21,"tarde","noche"))))
 
-datos$horaNEW1 <- ifelse(0<=datos$hora & datos$hora<6,"noche",ifelse(6<=datos$hora & datos$hora<=13,"mañana",ifelse(14<=datos$hora & datos$hora<=21,"tarde","noche")))
+datos$horaNEW1 <- ifelse(0<=datos$hora & datos$hora<6,"noche",ifelse(6<=datos$hora & datos$hora<=13,"ma?ana",ifelse(14<=datos$hora & datos$hora<=21,"tarde","noche")))
 
 
 # categoria horas pico
@@ -40,10 +40,10 @@ datos$unidades_involucradas <- ifelse((datos$unidad1_N=="tipo_0"  & datos$unidad
                                                                                                                                                                                           ifelse((datos$unidad1_N=="tipo_1"& datos$unidad2_N=="tipo_3") | (datos$unidad1_N=="tipo_3"& datos$unidad2_N=="tipo_1"),"M_C",
                                                                                                                                                                                                  ifelse((datos$unidad1_N=="tipo_2"  & datos$unidad2_N=="tipo_3")|(datos$unidad1_N=="tipo_3"  & datos$unidad2_N=="tipo_2"),"A_C","solo")))))))
 # dia / LESIONES  no hay asociacion
-datos$DIA_NEW <- ifelse(datos$dia=="sábado" | datos$dia=="domingo", "fds","l-v" )
+datos$DIA_NEW <- ifelse(datos$dia=="s?bado" | datos$dia=="domingo", "fds","l-v" )
 
 # dia / LESIONES  no hay asociacion
-datos$DIA_NEW2 <- ifelse(datos$dia=="sábado" | datos$dia=="viernes", "V-S","L-J-D" )
+datos$DIA_NEW2 <- ifelse(datos$dia=="s?bado" | datos$dia=="viernes", "V-S","L-J-D" )
 
 ############################################################################
 #Arbol
@@ -51,7 +51,7 @@ library(rpart)
 library(rpart.plot)
 
 Base1 <- data.frame(datos$clasebinaria,datos$carnet,datos$unidades_involucradas,datos$hora_pico,datos$`estado de la calzada`,datos$`funciona semaforo`, datos$dia)
-colnames(Base1)=c("clase","carnet","unidades_involucradas","hora","estado_calzada","semaforo_señal","dia")
+colnames(Base1)=c("clase","carnet","unidades_involucradas","hora","estado_calzada","semaforo_se?al","dia")
 Base1$carnet<-as.factor(Base1$carnet)
 Base1$unidades_involucradas<-as.factor(Base1$unidades_involucradas)
 Base1$dia<-as.factor(Base1$dia)
@@ -145,9 +145,10 @@ as(top_20_itemsets, Class = "data.frame") %>%
   ggplot(aes(x = reorder(items, support), y = support)) +
   geom_col() +
   coord_flip() +
-  labs(title = "Itemsets más frecuentes", x = "itemsets") +
+  labs(title = "Itemsets m?s frecuentes", x = "itemsets") +
   theme_bw()
 table(Base$clase)
 
 library(xlsx)
 write.xlsx(Base, file = "Base.xlsx")
+  

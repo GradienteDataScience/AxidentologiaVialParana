@@ -1,7 +1,7 @@
 ---
 title: "FACTORES DE INCIDENCIA EN SINIESTROS VIALES EN EL DEPARTAMENTO PARANÁ, ENTRE RÍOS"
 author: "Alejandro Rouiller – Zacarías Ojeda – Melisa Fernández"
-date: "8/29/2019"
+date: "16/10/2019"
 output:
   revealjs::revealjs_presentation:
     theme: league
@@ -88,7 +88,16 @@ datos$clasebinaria <- ifelse(datos$tipo_lesion=="Lesiones leves" | datos$tipo_le
 
 # Motivación
 
+* Costos humanos, materiales, psicológicos
+* Pérdidas personales, familiares, como sociedad
+* Agencia Nacional de Seguridad Vial adhirió al Decenio para la Acción para la Seguridad Vial 2011-2020 (disposición 92/2011)
+
 # Metodología
+
+* Recolección de datos
+* Carga manual
+* Procesamiento
+
 
 ## Objetivo
 
@@ -108,6 +117,37 @@ Cualquier persona hospitalizada durante más de 24 horas.
 
 ### **Unidad de trafico**
 Cualquiera de las partes involucradas en el siniestros.
+
+
+## Variables de estudio
+*  Día: día de la semana
+*  Rango horario: día / noche
+*  Clase de día: laborable/fin de semana
+*  Franja horaria: mañana (6-13), tarde (14-21) y  noche (22-5)
+*  Comisaria que interviene
+*  Geolocalización
+*  Unidades de tránsito: auto/auto, moto/auto, auto/peatón, moto/peatón, etc.
+*  Condiciones climáticas: despejado/nublado/niebla/llovizna/lluvioso/granizo
+*  Viento: suave/moderado/fuerte/temporal
+*  Visibilidad: buena/reducida 
+*  Iluminación: natural/ artificial (buena-regular-mala)/zona de penumbras/nula
+
+## Variables de estudio ...
+*  Calzada: asfalto/H° A°/tierra suelta/tierra compacta/ripio/arena/pasto corto/pasto largo
+*  Estado de la calzada: bueno/regular/malo 
+*  Estado del suelo: limpio/sucio/seco/húmedo/charcos de agua
+*  Señalización vial si/no horizontal/vertical/ sin incidencia
+*  Semáforos: si/no funciona si/no  Estado: intermitente/continuo
+*  Edad del conductor
+*  Tipo de siniestro: leve/grave
+
+## Variables de estudio ...
+*  Causalidad
+*  Marca de vehículo
+*  Modelo de vehículo
+*  Año de vehículo
+*  Licencia de conducir: si/no
+*  Informe requerido fiscalía: si/no
 
 # Análisis descriptivo
 
@@ -271,11 +311,21 @@ ggarrange(g2, g3, nrow=1, ncol=2, labels=c("Lunes a viernes", "Fines de semana")
 
 ## Analisis de la causalidad
 ```{r warning=FALSE, message=FALSE}
+datos <- datos%>%
+  mutate(
+    Causal = ifelse(Causalidad %in% c("Ingreso a garaje", "Salida de garaje", "Entrada a garaje"), "Acceso garaje", 
+                    ifelse(Causalidad %in% c("Prioridad de paso","Prioridad mano derecha", "Prioridad de mano"), "Prioridada de paso", 
+                           ifelse(Causalidad %in% c("Giro","Giro a la izquierda", "Giro a la derecha","Giro en U","Giro anticipado a la izquierda","Adelantamiento indebido","Sobrepaso por derecha en intersección"),"Giro",
+                                  ifelse(Causalidad %in% c("Via semaforizada","Intersección con semáforos"),"Via semaforizada", 
+                                         ifelse(Causalidad %in% c("Roce negativo", "Roce positivo"),"Roce",
+                                                ifelse(Causalidad %in% c("Invasión de carril", "Movil policial", "Colisión","Falla mecánica","Otros","NA","Supuesto vehiculo dado a la fuga"),"Otros", 
+                                                       ifelse(Causalidad %in% c("Perdida de control","Perdida de control / caida"),"Perdida de control",Causalidad)))))))
+  )  
 datos %>%
-  group_by(Causalidad)%>%
+  group_by(Causal)%>%
   summarise(cantidad = n())%>%
   arrange(desc(cantidad)) %>% 
-ggplot( aes(x = reorder(Causalidad, -cantidad), y=cantidad)) +
+ggplot( aes(x = reorder(Causal, -cantidad), y=cantidad)) +
   geom_bar(stat="identity", aes(fill=cantidad))+
   geom_text(aes(label=cantidad, vjust=0), size=3)+
   scale_fill_gradient(low="green", high="red")+
@@ -414,22 +464,6 @@ corrplot(
 )
 ```
 
-## Siniestro judicializado vs posesión de carnet
-```{r}
-(table(datos$judicializado,datos$carnet) %>%
-  chisq.test(tabla0))$stdres%>%
-corrplot(
-    is.cor = FALSE, 
-    method='circle', 
-    #order="hclust", 
-    title="Siniestro judicializado vs posesión de carnet", 
-    addCoef.col = "black", # Add coefficient of correlation
-    # Combine with significance
-    #sig.level = 0.05, insig = "blank"#, 
-    # hide correlation coefficient on the principal diagonal
-    mar=c(0,0,1,0) # http://stackoverflow.com/a/14754408/54964
-)
-```
 
 ## Resumen estadísticos de variables consideradas
 
