@@ -88,12 +88,13 @@ datos$clasebinaria <- ifelse(datos$tipo_lesion=="Lesiones leves" | datos$tipo_le
 
 # Motivación
 
+## Motivación
 * Costos humanos, materiales, psicológicos
 * Pérdidas personales, familiares, como sociedad
 * Agencia Nacional de Seguridad Vial adhirió al Decenio para la Acción para la Seguridad Vial 2011-2020 (disposición 92/2011)
 
 # Metodología
-
+## Metodología
 * Recolección de datos
 * Carga manual
 * Procesamiento
